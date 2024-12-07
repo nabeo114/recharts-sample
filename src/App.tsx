@@ -61,14 +61,14 @@ const App: React.FC = () => {
 
   return (
     <Box sx={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>ビットコイン価格データ ({currency.toUpperCase()})</h1>
+      <h1>Bitcoin Price Data ({currency.toUpperCase()})</h1>
       <FormControl sx={{ marginBottom: 2, minWidth: 120 }}>
-        <InputLabel id="currency-select-label">通貨</InputLabel>
+        <InputLabel id="currency-select-label">Currency</InputLabel>
         <Select
           labelId="currency-select-label"
           value={currency}
           onChange={handleCurrencyChange}
-          label="通貨"
+          label="Currency"
         >
           <MenuItem value="usd">USD</MenuItem>
           <MenuItem value="jpy">JPY</MenuItem>
@@ -82,16 +82,16 @@ const App: React.FC = () => {
         textColor="primary"
         centered
       >
-        <Tab label="過去1日" value="1" />
-        <Tab label="過去1週" value="7" />
-        <Tab label="過去1ヶ月" value="30" />
-        <Tab label="過去1年" value="365" />
+        <Tab label="Last 1 Day" value="1" />
+        <Tab label="Last 1 Week" value="7" />
+        <Tab label="Last 1 Month" value="30" />
+        <Tab label="Last 1 Year" value="365" />
       </Tabs>
 
       {loading ? (
-        <p>データを読み込んでいます...</p>
+        <p>Loading data...</p>
       ) : error ? (
-        <p>データの取得に失敗しました。</p>
+        <p>Failed to fetch data.</p>
       ) : (
         <ResponsiveContainer width="100%" height={400}>
           <AreaChart data={data} margin={{ left: 10, right: 20 }}>
@@ -103,12 +103,12 @@ const App: React.FC = () => {
               tickFormatter={(tick) => {
                 const date = new Date(tick);
                 return timeRange === '1'
-                  ? date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) // 時分のみ
-                  : date.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }); // 月日のみ
+                  ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) // 時分のみ
+                  : date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }); // 月日のみ
               }}
             />
             <YAxis domain={['auto', 'auto']} />
-            <Tooltip labelFormatter={(value) => new Date(value).toLocaleDateString('ja-JP') + ' ' + new Date(value).toLocaleTimeString('ja-JP')} />
+            <Tooltip labelFormatter={(value) => new Date(value).toLocaleDateString('en-US') + ' ' + new Date(value).toLocaleTimeString('en-US')} />
             <Legend />
             <Area type="monotone" dataKey="price" stroke="#8884d8" fill="#8884d8"/>
           </AreaChart>
