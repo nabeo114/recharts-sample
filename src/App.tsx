@@ -12,16 +12,17 @@ const App: React.FC = () => {
   const [data, setData] = useState<PriceData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
+  const [crypto, setCrypto] = useState<string>('bitcoin');
   const [timeRange, setTimeRange] = useState<string>('1');
   const [currency, setCurrency] = useState<string>('usd');
 
-  const fetchBitcoinData = async (currency: string, days: string) => {
+  const fetchBitcoinData = async (crypto: string, currency: string, days: string) => {
     try {
       setLoading(true);
       setError(false);
 
-      // CoinGecko APIからビットコインの時系列データを取得
-      const response = await axios.get('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart',
+      // CoinGecko APIから時系列データを取得
+      const response = await axios.get(`https://api.coingecko.com/api/v3/coins/${crypto}/market_chart`,
         {
           params: {
             vs_currency: currency, // 選択された通貨
@@ -46,10 +47,14 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchBitcoinData(currency, timeRange);
+    fetchBitcoinData(crypto, currency, timeRange);
     const interval = setInterval(fetchBitcoinData, 300000); // 5分ごとにデータ更新
     return () => clearInterval(interval); // アンマウント時にクリア
-  }, [currency, timeRange]);
+  }, [crypto, currency, timeRange]);
+
+  const handleCryptoChange = (event: SelectChangeEvent) => {
+    setCrypto(event.target.value); // 選択された暗号通貨を更新
+  };
 
   const handleCurrencyChange = (event: SelectChangeEvent) => {
     setCurrency(event.target.value); // 選択された通貨を更新
@@ -61,7 +66,21 @@ const App: React.FC = () => {
 
   return (
     <Box sx={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Bitcoin Price Data ({currency.toUpperCase()})</h1>
+      <h1>{crypto.toUpperCase()} Price Data ({currency.toUpperCase()})</h1>
+      <FormControl sx={{ marginBottom: 2, minWidth: 120 }}>
+        <InputLabel id="crypto-select-label">Cryptocurrency</InputLabel>
+        <Select
+          labelId="crypto-select-label"
+          value={crypto}
+          onChange={handleCryptoChange}
+          label="Cryptocurrency"
+        >
+          <MenuItem value="bitcoin">Bitcoin</MenuItem>
+          <MenuItem value="ethereum">Ethereum</MenuItem>
+          <MenuItem value="dogecoin">Dogecoin</MenuItem>
+        </Select>
+      </FormControl>
+
       <FormControl sx={{ marginBottom: 2, minWidth: 120 }}>
         <InputLabel id="currency-select-label">Currency</InputLabel>
         <Select
