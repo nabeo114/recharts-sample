@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { Tabs, Tab, Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import { Tabs, Tab, Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, IconButton } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface PriceData {
   time: number;
@@ -15,8 +16,9 @@ const App: React.FC = () => {
   const [crypto, setCrypto] = useState<string>('bitcoin');
   const [timeRange, setTimeRange] = useState<string>('1');
   const [currency, setCurrency] = useState<string>('usd');
+  const [updateInterval, setUpdateInterval] = useState<number>(300000); // Default to 5 minutes
 
-  const fetchBitcoinData = async (crypto: string, currency: string, days: string) => {
+  const fetchCryptoData = async (crypto: string, currency: string, days: string) => {
     try {
       setLoading(true);
       setError(false);
@@ -47,10 +49,14 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchBitcoinData(crypto, currency, timeRange);
-    const interval = setInterval(fetchBitcoinData, 300000); // 5分ごとにデータ更新
+    fetchCryptoData(crypto, currency, timeRange);
+    const interval = setInterval(() => fetchCryptoData(crypto, currency, timeRange), updateInterval);
     return () => clearInterval(interval); // アンマウント時にクリア
-  }, [crypto, currency, timeRange]);
+  }, [crypto, currency, timeRange, updateInterval]);
+
+  const handleManualRefresh = () => {
+    fetchCryptoData(crypto, currency, timeRange);
+  };
 
   const handleCryptoChange = (event: SelectChangeEvent) => {
     setCrypto(event.target.value); // 選択された暗号通貨を更新
@@ -64,10 +70,21 @@ const App: React.FC = () => {
     setTimeRange(newValue); // 選択された期間を更新
   };
 
+  const handleIntervalChange = (event: SelectChangeEvent) => {
+    const intervalMapping = {
+      '1': 60000, // 1 minute
+      '5': 300000, // 5 minutes
+      '15': 900000, // 15 minutes
+      '30': 1800000, // 30 minutes
+      '60': 3600000, // 60 minutes
+    };
+    setUpdateInterval(intervalMapping[event.target.value as keyof typeof intervalMapping]);
+  };
+
   return (
     <Box sx={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <h1>{crypto.toUpperCase()} Price Data ({currency.toUpperCase()})</h1>
-      <FormControl sx={{ marginBottom: 2, minWidth: 120 }}>
+      <FormControl sx={{ mb: 2, minWidth: 120 }}>
         <InputLabel id="crypto-select-label">Cryptocurrency</InputLabel>
         <Select
           labelId="crypto-select-label"
@@ -81,7 +98,7 @@ const App: React.FC = () => {
         </Select>
       </FormControl>
 
-      <FormControl sx={{ marginBottom: 2, minWidth: 120 }}>
+      <FormControl sx={{ mb: 2, minWidth: 120 }}>
         <InputLabel id="currency-select-label">Currency</InputLabel>
         <Select
           labelId="currency-select-label"
@@ -93,6 +110,26 @@ const App: React.FC = () => {
           <MenuItem value="jpy">JPY</MenuItem>
         </Select>
       </FormControl>
+
+      <FormControl sx={{ mb: 2, minWidth: 120, ml: 2 }}>
+        <InputLabel id="update-interval-label">Update Interval</InputLabel>
+        <Select
+          labelId="update-interval-label"
+          value={(updateInterval / 60000).toString()}
+          onChange={handleIntervalChange}
+          label="Update Interval"
+        >
+          <MenuItem value="1">1 Min</MenuItem>
+          <MenuItem value="5">5 Min</MenuItem>
+          <MenuItem value="15">15 Min</MenuItem>
+          <MenuItem value="30">30 Min</MenuItem>
+          <MenuItem value="60">60 Min</MenuItem>
+        </Select>
+      </FormControl>
+
+      <IconButton onClick={handleManualRefresh} aria-label="Refresh Data">
+        <RefreshIcon />
+      </IconButton>
 
       <Tabs 
         value={timeRange} 
