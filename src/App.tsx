@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { Tabs, Tab, Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, IconButton } from '@mui/material';
+import { Tabs, Tab, Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, IconButton, useTheme } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface PriceData {
@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>('1');
   const [currency, setCurrency] = useState<string>('usd');
   const [updateInterval, setUpdateInterval] = useState<number>(300000); // Default to 5 minutes
+  const theme = useTheme();
 
   const fetchCryptoData = async (crypto: string, currency: string, days: string) => {
     try {
@@ -82,61 +83,86 @@ const App: React.FC = () => {
   };
 
   return (
-    <Box sx={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+    <Box
+      sx={{
+        padding: '20px',
+        fontFamily: 'Arial, sans-serif',
+        [theme.breakpoints.down('sm')]: {
+          padding: '10px',
+        },
+      }}
+    >
       <h1>{crypto.toUpperCase()} Price Data ({currency.toUpperCase()})</h1>
-      <FormControl sx={{ mb: 2, minWidth: 120 }}>
-        <InputLabel id="crypto-select-label">Cryptocurrency</InputLabel>
-        <Select
-          labelId="crypto-select-label"
-          value={crypto}
-          onChange={handleCryptoChange}
-          label="Cryptocurrency"
-        >
-          <MenuItem value="bitcoin">Bitcoin</MenuItem>
-          <MenuItem value="ethereum">Ethereum</MenuItem>
-          <MenuItem value="dogecoin">Dogecoin</MenuItem>
-        </Select>
-      </FormControl>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 2,
+          [theme.breakpoints.down('sm')]: {
+            flexDirection: 'column',
+          },
+        }}
+      >
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel id="crypto-select-label">Cryptocurrency</InputLabel>
+          <Select
+            labelId="crypto-select-label"
+            value={crypto}
+            onChange={handleCryptoChange}
+            label="Cryptocurrency"
+          >
+            <MenuItem value="bitcoin">Bitcoin</MenuItem>
+            <MenuItem value="ethereum">Ethereum</MenuItem>
+            <MenuItem value="dogecoin">Dogecoin</MenuItem>
+          </Select>
+        </FormControl>
 
-      <FormControl sx={{ mb: 2, minWidth: 120 }}>
-        <InputLabel id="currency-select-label">Currency</InputLabel>
-        <Select
-          labelId="currency-select-label"
-          value={currency}
-          onChange={handleCurrencyChange}
-          label="Currency"
-        >
-          <MenuItem value="usd">USD</MenuItem>
-          <MenuItem value="jpy">JPY</MenuItem>
-        </Select>
-      </FormControl>
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel id="currency-select-label">Currency</InputLabel>
+          <Select
+            labelId="currency-select-label"
+            value={currency}
+            onChange={handleCurrencyChange}
+            label="Currency"
+          >
+            <MenuItem value="usd">USD</MenuItem>
+            <MenuItem value="jpy">JPY</MenuItem>
+          </Select>
+        </FormControl>
 
-      <FormControl sx={{ mb: 2, minWidth: 120, ml: 2 }}>
-        <InputLabel id="update-interval-label">Update Interval</InputLabel>
-        <Select
-          labelId="update-interval-label"
-          value={(updateInterval / 60000).toString()}
-          onChange={handleIntervalChange}
-          label="Update Interval"
-        >
-          <MenuItem value="1">1 Min</MenuItem>
-          <MenuItem value="5">5 Min</MenuItem>
-          <MenuItem value="15">15 Min</MenuItem>
-          <MenuItem value="30">30 Min</MenuItem>
-          <MenuItem value="60">60 Min</MenuItem>
-        </Select>
-      </FormControl>
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel id="update-interval-label">Update Interval</InputLabel>
+          <Select
+            labelId="update-interval-label"
+            value={(updateInterval / 60000).toString()}
+            onChange={handleIntervalChange}
+            label="Update Interval"
+          >
+            <MenuItem value="1">1 Min</MenuItem>
+            <MenuItem value="5">5 Min</MenuItem>
+            <MenuItem value="15">15 Min</MenuItem>
+            <MenuItem value="30">30 Min</MenuItem>
+            <MenuItem value="60">60 Min</MenuItem>
+          </Select>
+        </FormControl>
 
-      <IconButton onClick={handleManualRefresh} aria-label="Refresh Data">
-        <RefreshIcon />
-      </IconButton>
+        <IconButton onClick={handleManualRefresh} aria-label="Refresh Data">
+          <RefreshIcon />
+        </IconButton>
+      </Box>
 
       <Tabs 
         value={timeRange} 
         onChange={handleTabChange} 
         indicatorColor="primary" 
         textColor="primary"
-        centered
+        sx={{
+          [theme.breakpoints.down('sm')]: {
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+          },
+        }}
       >
         <Tab label="Last 1 Day" value="1" />
         <Tab label="Last 1 Week" value="7" />
@@ -149,7 +175,11 @@ const App: React.FC = () => {
       ) : error ? (
         <p>Failed to fetch data.</p>
       ) : (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer
+          width="100%"
+          height={400}
+          debounce={1}
+        >
           <AreaChart data={data} margin={{ left: 10, right: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
@@ -164,9 +194,15 @@ const App: React.FC = () => {
               }}
             />
             <YAxis domain={['auto', 'auto']} />
-            <Tooltip labelFormatter={(value) => new Date(value).toLocaleDateString('en-US') + ' ' + new Date(value).toLocaleTimeString('en-US')} />
+            <Tooltip labelFormatter={(value) => new Date(value).toLocaleString()} />
             <Legend />
-            <Area type="monotone" dataKey="price" stroke="#8884d8" fill="#8884d8"/>
+            <defs>
+              <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <Area type="monotone" dataKey="price" stroke="#8884d8" fill="url(#colorPrice)"/>
           </AreaChart>
         </ResponsiveContainer>
       )}
