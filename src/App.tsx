@@ -157,10 +157,11 @@ const App: React.FC = () => {
         onChange={handleTabChange} 
         indicatorColor="primary" 
         textColor="primary"
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{
-          [theme.breakpoints.down('sm')]: {
-            flexDirection: 'column',
-            alignItems: 'flex-start',
+          '& .MuiTabs-scrollButtons': {
+            '&.Mui-disabled': { opacity: 0.3 }, // 無効化されたボタンのスタイル
           },
         }}
       >
